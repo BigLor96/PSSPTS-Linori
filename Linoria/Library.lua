@@ -3509,8 +3509,13 @@ function Library:CreateWindow(...)
                 Tab:AddBlank(3);
                 Tab:Resize();
 
-                -- Show first tab (number is 2 cus of the UIListLayout that also sits in that instance)
-                if #TabboxButtons:GetChildren() == 2 then
+                -- Show first tab in this tabbox (count tabs, not raw children -- containers now hold an auto-added UICorner)
+                local TabCount = 0;
+                for _ in next, Tabbox.Tabs do
+                    TabCount = TabCount + 1;
+                end;
+
+                if TabCount == 1 then
                     Tab:Show();
                 end;
 
@@ -3536,8 +3541,8 @@ function Library:CreateWindow(...)
             end;
         end);
 
-        -- This was the first tab added, so we show it by default.
-        if #TabContainer:GetChildren() == 1 then
+        -- This was the first tab added, so we show it by default (count tabs, not raw children -- container now holds an auto-added UICorner)
+        if next(Window.Tabs) == nil then
             Tab:ShowTab();
         end;
 
