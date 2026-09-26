@@ -30,14 +30,15 @@ local Library = {
     HudRegistry = {};
 
     FontColor = Color3.fromRGB(255, 255, 255);
-    MainColor = Color3.fromRGB(28, 28, 28);
-    BackgroundColor = Color3.fromRGB(20, 20, 20);
+    MainColor = Color3.fromRGB(20, 20, 22);
+    BackgroundColor = Color3.fromRGB(11, 11, 13);
     AccentColor = Color3.fromRGB(0, 85, 255);
-    OutlineColor = Color3.fromRGB(50, 50, 50);
+    OutlineColor = Color3.fromRGB(42, 42, 48);
     RiskColor = Color3.fromRGB(255, 50, 50),
 
     Black = Color3.new(0, 0, 0);
-    Font = Enum.Font.Code,
+    Font = Enum.Font.Code;
+    TitleFont = Enum.Font.GothamBold;
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -127,6 +128,18 @@ function Library:Create(Class, Properties)
 
     for Property, Value in next, Properties do
         _Instance[Property] = Value;
+    end;
+
+    -- Docs look: rounded corners on box-like elements
+    local ClassName = _Instance.ClassName;
+    if (ClassName == 'Frame' or ClassName == 'ScrollingFrame' or ClassName == 'TextBox'
+        or ClassName == 'ImageLabel' or ClassName == 'ImageButton' or ClassName == 'TextButton'
+        or ClassName == 'ViewportFrame' or ClassName == 'CanvasGroup')
+        and not _Instance:FindFirstChildOfClass('UICorner') then
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 5);
+            Parent = _Instance;
+        });
     end;
 
     return _Instance;
@@ -1832,10 +1845,13 @@ do
         local ToggleOuter = Library:Create('Frame', {
             BackgroundColor3 = Color3.new(0, 0, 0);
             BorderColor3 = Color3.new(0, 0, 0);
-            Size = UDim2.new(0, 13, 0, 13);
+            Size = UDim2.new(0, 34, 0, 18);
             ZIndex = 5;
             Parent = Container;
         });
+
+        local ToggleOuterCorner = ToggleOuter:FindFirstChildOfClass('UICorner');
+        if ToggleOuterCorner then ToggleOuterCorner.CornerRadius = UDim.new(0, 9); end;
 
         Library:AddToRegistry(ToggleOuter, {
             BorderColor3 = 'Black';
@@ -1850,13 +1866,28 @@ do
             Parent = ToggleOuter;
         });
 
+        local ToggleInnerCorner = ToggleInner:FindFirstChildOfClass('UICorner');
+        if ToggleInnerCorner then ToggleInnerCorner.CornerRadius = UDim.new(0, 9); end;
+
         Library:AddToRegistry(ToggleInner, {
             BackgroundColor3 = 'MainColor';
             BorderColor3 = 'OutlineColor';
         });
 
+        local ToggleKnob = Library:Create('Frame', {
+            BackgroundColor3 = Color3.fromRGB(139, 139, 149);
+            BorderSizePixel = 0;
+            Position = UDim2.new(0, 2, 0, 2);
+            Size = UDim2.new(0, 14, 0, 14);
+            ZIndex = 7;
+            Parent = ToggleInner;
+        });
+
+        local ToggleKnobCorner = ToggleKnob:FindFirstChildOfClass('UICorner');
+        if ToggleKnobCorner then ToggleKnobCorner.CornerRadius = UDim.new(0, 7); end;
+
         local ToggleLabel = Library:CreateLabel({
-            Size = UDim2.new(0, 216, 1, 0);
+            Size = UDim2.new(0, 195, 1, 0);
             Position = UDim2.new(1, 6, 0, 0);
             TextSize = 14;
             Text = Info.Text;
@@ -1899,6 +1930,11 @@ do
 
             Library.RegistryMap[ToggleInner].Properties.BackgroundColor3 = Toggle.Value and 'AccentColor' or 'MainColor';
             Library.RegistryMap[ToggleInner].Properties.BorderColor3 = Toggle.Value and 'AccentColorDark' or 'OutlineColor';
+
+            TweenService:Create(ToggleKnob, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = Toggle.Value and UDim2.new(0, 18, 0, 2) or UDim2.new(0, 2, 0, 2);
+                BackgroundColor3 = Toggle.Value and Color3.new(1, 1, 1) or Color3.fromRGB(139, 139, 149);
+            }):Play();
         end;
 
         function Toggle:OnChanged(Func)
@@ -2970,6 +3006,18 @@ function Library:CreateWindow(...)
         Parent = ScreenGui;
     });
 
+    -- Docs look: drop shadow behind the window
+    Library:Create('Frame', {
+        Name = 'WindowShadow';
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BackgroundTransparency = 0.45;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 8, 0, 8);
+        Size = UDim2.new(1, 8, 1, 8);
+        ZIndex = 1;
+        Parent = Outer;
+    });
+
     Library:MakeDraggable(Outer, 25);
 
     local Inner = Library:Create('Frame', {
@@ -2988,6 +3036,7 @@ function Library:CreateWindow(...)
     });
 
     local WindowLabel = Library:CreateLabel({
+        Font = Library.TitleFont;
         Position = UDim2.new(0, 7, 0, 0);
         Size = UDim2.new(0, 0, 0, 25);
         Text = Config.Title or '';
@@ -3064,7 +3113,7 @@ function Library:CreateWindow(...)
             Tabboxes = {};
         };
 
-        local TabButtonWidth = Library:GetTextBounds(Name, Library.Font, 16);
+        local TabButtonWidth = Library:GetTextBounds(Name, Library.TitleFont, 16);
 
         local TabButton = Library:Create('Frame', {
             BackgroundColor3 = Library.BackgroundColor;
@@ -3080,6 +3129,7 @@ function Library:CreateWindow(...)
         });
 
         local TabButtonLabel = Library:CreateLabel({
+            Font = Library.TitleFont;
             Position = UDim2.new(0, 0, 0, 0);
             Size = UDim2.new(1, 0, 1, -1);
             Text = Name;
@@ -3226,6 +3276,7 @@ function Library:CreateWindow(...)
             });
 
             local GroupboxLabel = Library:CreateLabel({
+                Font = Library.TitleFont;
                 Size = UDim2.new(1, 0, 0, 18);
                 Position = UDim2.new(0, 4, 0, 2);
                 TextSize = 14;
